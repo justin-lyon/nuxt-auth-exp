@@ -14,10 +14,7 @@ module.exports = r => {
     return bcrypt.hash(password, 10)
       .then(hash => {
         newUser.password = hash
-        return newUser
-      })
-      .then(user => {
-        return rUsers.insert(user).run(r.conn)
+        return rUsers.insert(newUser).run(r.conn)
       })
       .then(result => {
         if(result.inserted === 1) {
@@ -27,17 +24,23 @@ module.exports = r => {
       })
   }
 
-  const queryUserByEmail = email => {
-    return rUsers.filter({ email }).limit(1).run(r.conn)
+  const queryUserByEmail = (email, fields) => {
+    return rUsers.filter({ email }).pluck(...fields).limit(1).run(r.conn)
       .then(cursor => cursor.toArray())
       .then(results => {
         if (results[0]) {
-          const { username, email, id } = results[0]
-          const user = { username, email, id }
+          const { username, email, id, password } = results[0]
+          const user = { username, email, id, password }
           return user
         }
-        return results
+        return null
       })
+  }
+
+  const queryUserById = id => {
+    return rUsers.get(id).run(r.conn)
+      .then(console.log)
+      .catch(console.error)
   }
 
   return {

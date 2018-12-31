@@ -57,10 +57,24 @@ module.exports = {
     strategies: {
       local: {
         endpoints: {
-          login: { url: '/auth/login', method: 'POST', propertyName: 'data.token' },
-          user: { url: '/auth/me', method: 'GET', propertyName: 'data' },
+          login: { url: '/auth/login', method: 'post', propertyName: 'data.token' },
+          user: { url: '/auth/me', method: 'get', propertyName: 'data' },
           logout: false
-        }
+        },
+        tokenRequired: true,
+        tokenType: 'bearer'
+      }
+    },
+    redirect: {
+      login: '/login',
+      home: '/inspire'
+    },
+    cookie: {
+      prefix: 'nae-auth.',
+      options: {
+        path: '/',
+        expires: 7,
+        secure: true
       }
     }
   },

@@ -16,11 +16,6 @@ const r = require('./db')
 const routes = require('./routes')(r)
 app.use(routes)
 
-app.use('/', (req, res, next) => {
-  console.log('request made')
-  next()
-})
-
 // Import and Set Nuxt.js options
 let config = require('../nuxt.config.js')
 config.dev = !(process.env.NODE_ENV === 'production')

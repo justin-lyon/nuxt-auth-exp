@@ -17,15 +17,15 @@ const mutations = {
 }
 
 const actions = {
-  register ({ commit }, user) {
-    // console.log('auth/register', user)
-    // return this.$axios.post('/auth/register', user)
-    //   .then(res => {
-    //     console.log('auth/register post success', res)
-    //   })
-    //   .catch(err => {
-    //     console.error('Error creating user.', err)
-    //   })
+  register ({ commit, dispatch }, user) {
+    console.log('auth/register', user)
+    return this.$axios.post('/auth/register', user)
+      .then(res => {
+        console.log('auth/register post success', res)
+      })
+      .catch(err => {
+        console.error('Error creating user.', err)
+      })
   },
 
   login ({ commit }, user) {
@@ -35,6 +35,7 @@ const actions = {
     })
     .then(res => {
       console.log('user', res)
+      commit('setUser', user)
       return res
     })
   }

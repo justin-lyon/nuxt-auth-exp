@@ -8,7 +8,7 @@
       sm8
       md6>
       <v-card>
-        <v-card-title class="headline">Login</v-card-title>
+        <v-card-title class="headline">Register</v-card-title>
         <v-card-text>
 
           <v-text-field type="text"

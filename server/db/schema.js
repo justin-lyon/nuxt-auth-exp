@@ -6,7 +6,6 @@ module.exports = [
       'username',
       'email',
       'password',
-      'token'
     ]
   }
 ]
