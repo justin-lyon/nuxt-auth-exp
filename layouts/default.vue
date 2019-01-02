@@ -1,5 +1,5 @@
 <template>
-  <v-app dark>
+  <v-app :dark="isDark">
     <v-navigation-drawer
       :mini-variant="miniVariant"
       :clipped="clipped"
@@ -22,7 +22,37 @@
             <v-list-tile-title v-text="item.title" />
           </v-list-tile-content>
         </v-list-tile>
+
         <v-list-tile
+          v-if="isAuthenticated"
+          to="profile"
+          router
+          exact
+        >
+          <v-list-tile-action>
+            <v-icon >account_circle</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-content>
+            <v-list-tile-title >Profile</v-list-tile-title>
+          </v-list-tile-content>
+        </v-list-tile>
+
+        <v-list-tile
+          v-if="!isAuthenticated"
+          to="login"
+          router
+          exact
+        >
+          <v-list-tile-action>
+            <v-icon >input</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-content>
+            <v-list-tile-title >Login</v-list-tile-title>
+          </v-list-tile-content>
+        </v-list-tile>
+
+        <v-list-tile
+          v-if="isAuthenticated"
           @click="logout"
         >
           <v-list-tile-action>
@@ -90,12 +120,13 @@
       :fixed="fixed"
       app
     >
-      <span>&copy; 2017</span>
+      <span>&copy; &mdash; Justin Lyon 2017</span>
     </v-footer>
   </v-app>
 </template>
 
 <script>
+  import { mapGetters } from 'vuex'
   export default {
     data() {
       return {
@@ -104,14 +135,19 @@
         fixed: false,
         items: [
           { icon: 'apps', title: 'Welcome', to: '/' },
-          { icon: 'bubble_chart', title: 'Inspire', to: '/inspire' },
-          { icon: 'input', title: 'Login', to: '/login' },
         ],
         miniVariant: false,
         right: true,
         rightDrawer: false,
         title: 'Vuetify.js'
       }
+    },
+
+    computed: {
+      ...mapGetters({
+        isAuthenticated: 'auth/isAuthenticated',
+        isDark: 'user/isDarkTheme'
+      })
     },
 
     methods: {
