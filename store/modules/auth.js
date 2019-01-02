@@ -1,30 +1,25 @@
 const namespaced = true
 
+/* state injected by @nuxtjs/auth
 const state = () => ({
   loggedIn: false,
   user: null
 })
+*/
 
 const getters = {
   user: state => state.user,
   isAuthenticated: state => state.loggedIn
 }
 
-const mutations = {
-  setUser (state, newUser) {
-    state.user = newUser
-  }
-}
+const mutations = {}
 
 const actions = {
-  register ({ commit, dispatch }, user) {
+  register ({ dispatch }, user) {
     console.log('auth/register', user)
     return this.$axios.post('/auth/register', user)
       .then(res => {
-        console.log('auth/register post success', res)
-      })
-      .catch(err => {
-        console.error('Error creating user.', err)
+        dispatch('login', user)
       })
   },
 
@@ -33,17 +28,18 @@ const actions = {
     return this.$auth.loginWith('local', {
       data: user
     })
-    .then(res => {
-      console.log('user', res)
-      commit('setUser', user)
-      return res
+    .then(() => {
+      console.log('success, logged in')
+      this.$router.push('/inspire')
+    })
+    .catch(err => {
+      console.error('Error during login: ', err.message)
     })
   }
 }
 
 export default {
   namespaced,
-  state,
   getters,
   mutations,
   actions

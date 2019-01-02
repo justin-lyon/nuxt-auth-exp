@@ -1,110 +1,94 @@
-const jwt = require('jsonwebtoken')
-const bcrypt = require('bcrypt')
 const router = require('express').Router()
-const { JWT_SECRET, JWT_DURATION } = require('../jwt-config')
+const bcrypt = require('bcrypt')
+const createError = require('http-errors')
+const jwt = require('../utils/jwt')
 
-module.exports = r => {
+module.exports = db => {
+  const rUsers = require('../db/objects/users')(db)
 
-  const rUsers = require('../db/objects/users')(r)
-
-  const register = (req, res) => {
-    console.log('req.body', req.body)
+  const register = (req, res, next) => {
     const { username, email, password } = req.body
-
-    if (!username || !email || !password) {
-      return res.status(400).json({
-        type: 'error',
-        message: 'Username, Email, and Password are required.'
-      })
-    }
-
-    const now = new Date()
-    const newUser = {
-      username,
-      email,
-      password,
-      createdDate: now
+    if(!username || !email || !password) {
+      return next(createError(422, 'Username, email, and password required.'))
     }
 
     rUsers.queryUserByEmail(email, ['email'])
       .then(user => {
-        console.log(user)
         if(user) {
-          throw new Error('This email has already been registered.')
+          return next(createError(422, 'This email is already registered.'))
         }
-        return rUsers.insertUser(newUser)
+        return rUsers.insertUser(req.body)
       })
-      .then(userId => {
-        newUser.id = userId
-        console.log('created new user', newUser)
-        return newUser
-      })
-      .then(user => {
-        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: JWT_DURATION })
-        const cleanUser = {
-          username: user.username,
-          email: user.email,
-          id: user.id,
-          token
+      .then(id => {
+        if (id) {
+          return res.json({ id })
         }
-        console.log('tokenized data', cleanUser)
-        return res.json(cleanUser)
       })
       .catch(err => {
-        console.error('Error creating user.', err)
-        return res.status(500).json(err)
+        console.error('Fatal Error: ', err.message)
+        return next(createError(err.statusCode || 500, err.message || 'Unhandled Exception.'))
       })
   }
 
-  const login = (req, res) => {
-    console.log('req.body', req.body)
+  const login = (req, res, next) => {
     const { email, password } = req.body
-
     if (!email || !password) {
-      return res.status(400).json({
-        type: 'error',
-        message: 'Username or Email, and Password are required.'
-      })
+      return next(createError(422, 'Email and password required.'))
     }
 
-    rUsers.queryUserByEmail(email, ['username', 'email', 'id', 'password'])
+    rUsers.queryUserByEmail(email, ['id', 'username', 'email', 'password'])
       .then(user => {
-        console.log(user)
-        if(user) {
-          return user
+        if (!user) {
+          return next(createError(401, 'Invalid email or password.'))
         }
-        throw new Error('User not found.')
-      })
-      .then(user => {
+
         return bcrypt.compare(password, user.password)
-          .then(pwIsValid => {
-            if (pwIsValid) {
-              const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: JWT_DURATION })
-              return res.json({
-                username: user.username,
-                email: user.email,
-                id: user.id,
-                token
-              })
+          .then(isValid => {
+            if (!isValid) {
+              return next(createError(401, 'Invalid email or password.'))
             }
 
-            throw new Error('Invalid Username or Password.')
+            const token = jwt.serialize({ id: user.id, email: user.email })
+            res.json({ token })
+          })
+          .catch(err => {
+            return next(createError(err.statusCode, error.message))
           })
       })
       .catch(err => {
-        console.error('Error during login.', err)
-        return res.status(500).json(err)
+        console.error('Error logging in. ', err.message)
+        return next(createError(err.statusCode || 500, err.message || 'Unhandled Exception.'))
       })
   }
 
-  const me = (req, res) => {
-    const token = req.headers['x-access-token']
-    if(!token) return res.status(400).json({
-      type: 'error',
-      message: 'x-access-token header not found.'
-    })
-    const user = jwt.verify(token, JWT_SECRET)
-    res.json(user)
+  const me = (req, res, next) => {
+    const authorization = req.headers.authorization
+    const accessToken = authorization.replace('Bearer ', '')
+
+    if (!accessToken) {
+      return next(createError(401, 'Unauthorized.'))
+    }
+
+    jwt.deserialize(accessToken)
+      .then(decoded => {
+        const now = Date.now()
+        if(decoded.exp >= now) {
+          return next(createError(401, 'Unauthorized.'))
+        }
+
+        return rUsers.queryUserById(decoded.id)
+      })
+      .then(user => {
+        if (!user) {
+          return next(createError(400, 'User not found.'))
+        }
+        console.log('found user: ', user)
+        res.json(user)
+      })
+      .catch(err => {
+        console.error('Error: ', err.message)
+        return next(createError(err.statusCode || 500, err.message || 'Unhandled Exception.'))
+      })
   }
 
   router.post('/register', register)

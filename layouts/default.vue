@@ -22,6 +22,16 @@
             <v-list-tile-title v-text="item.title" />
           </v-list-tile-content>
         </v-list-tile>
+        <v-list-tile
+          @click="logout"
+        >
+          <v-list-tile-action>
+            <v-icon >input</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-content>
+            <v-list-tile-title >Logout</v-list-tile-title>
+          </v-list-tile-content>
+        </v-list-tile>
       </v-list>
     </v-navigation-drawer>
     <v-toolbar
@@ -95,12 +105,18 @@
         items: [
           { icon: 'apps', title: 'Welcome', to: '/' },
           { icon: 'bubble_chart', title: 'Inspire', to: '/inspire' },
-          { icon: 'input', title: 'Login', to: '/login' }
+          { icon: 'input', title: 'Login', to: '/login' },
         ],
         miniVariant: false,
         right: true,
         rightDrawer: false,
         title: 'Vuetify.js'
+      }
+    },
+
+    methods: {
+      logout () {
+        this.$auth.logout()
       }
     }
   }

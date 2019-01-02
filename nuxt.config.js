@@ -35,7 +35,8 @@ module.exports = {
   ** Plugins to load before mounting the App
   */
   plugins: [
-    '@/plugins/vuetify'
+    '@/plugins/vuetify',
+    '~/plugins/axios'
   ],
 
   /*
@@ -57,24 +58,10 @@ module.exports = {
     strategies: {
       local: {
         endpoints: {
-          login: { url: '/auth/login', method: 'post', propertyName: 'data.token' },
-          user: { url: '/auth/me', method: 'get', propertyName: 'data' },
+          login: { url: '/auth/login', method: 'post', propertyName: 'token', },
+          user: { url: '/auth/me', method: 'get', propertyName: '' },
           logout: false
         },
-        tokenRequired: true,
-        tokenType: 'bearer'
-      }
-    },
-    redirect: {
-      login: '/login',
-      home: '/inspire'
-    },
-    cookie: {
-      prefix: 'nae-auth.',
-      options: {
-        path: '/',
-        expires: 7,
-        secure: true
       }
     }
   },
